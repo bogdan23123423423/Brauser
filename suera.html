@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suera</title>
+<style>
+  :root{
+    --grad-a:#3b4fe0;
+    --grad-b:#22d3ee;
+    --grad: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+    --ink:#0b1220;
+    --ink-soft:#5a6478;
+    --ink-faint:#8b93a6;
+    --paper:#f4f6fb;
+    --surface:#ffffff;
+    --line:#e3e8f1;
+    --line-strong:#ccd4e2;
+    --danger:#e0523b;
+    --danger-soft:#fdeeea;
+    --focus: #3b4fe0;
+    --radius-pill:999px;
+    --radius-md:12px;
+    --radius-sm:8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;}
+  input{font-family:inherit;}
+  ::selection{background:rgba(59,79,224,.18);}
+
+  a.suera-link, .link-btn{
+    background:none;border:none;color:var(--grad-a);cursor:pointer;font-size:13px;font-weight:600;
+  }
+
+  /* ---------- shell ---------- */
+  #shell{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+
+  /* ---------- titlebar ---------- */
+  .titlebar{
+    height:44px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 10px;
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:flex;align-items:center;gap:7px;
+    padding-right:8px;
+    user-select:none;
+    cursor:pointer;
+  }
+  .brand svg{display:block;}
+  .brand-name{
+    font-size:14.5px;
+    font-weight:700;
+    letter-spacing:-.01em;
+  }
+  .titlebar-spacer{flex:1;}
+  .icon-btn{
+    width:30px;height:30px;
+    display:flex;align-items:center;justify-content:center;
+    border:none;background:transparent;border-radius:var(--radius-sm);
+    color:var(--ink-soft);cursor:pointer;
+    transition:background .12s ease, color .12s ease;
+  }
+  .icon-btn:hover{background:var(--paper);color:var(--ink);}
+  .icon-btn:focus-visible, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--focus); outline-offset:2px;
+  }
+  .icon-btn.active{background:#eef1fb;color:var(--grad-a);}
+
+  /* ---------- tab strip ---------- */
+  .tabstrip{
+    flex:0 0 auto;
+    display:flex;
+    align-items:flex-end;
+    gap:2px;
+    padding:6px 8px 0 8px;
+    background:var(--paper);
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .tabstrip::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;
+    max-width:200px;
+    min-width:120px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    height:32px;
+    padding:0 8px 0 10px;
+    background:#e7ebf3;
+    color:var(--ink-soft);
+    border-radius:9px 9px 0 0;
+    cursor:pointer;
+    position:relative;
+  }
+  .tab[aria-selected="true"]{
+    background:var(--surface);
+    color:var(--ink);
+  }
+  .tab[aria-selected="true"]::after{
+    content:"";
+    position:absolute;left:10px;right:10px;bottom:-1px;height:2px;
+    background:var(--grad);border-radius:2px;
+  }
+  .tab-dot{
+    width:6px;height:6px;border-radius:50%;flex:0 0 auto;
+    background:var(--grad);
+  }
+  .tab-title{
+    flex:1;min-width:0;
+    font-size:12.5px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .tab-close{
+    flex:0 0 auto;
+    width:18px;height:18px;border-radius:5px;border:none;background:transparent;
+    color:var(--ink-faint);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tab-close:hover{background:#d9dfec;color:var(--ink);}
+  .new-tab-btn{
+    flex:0 0 auto;
+    width:30px;height:30px;margin:0 0 2px 4px;
+    border:none;background:transparent;border-radius:var(--radius-sm);
+    color:var(--ink-soft);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .new-tab-btn:hover{background:#e7ebf3;color:var(--ink);}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:6px;
+    padding:8px 10px;
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-cluster{display:flex;align-items:center;gap:2px;}
+  .omnibox-form{flex:1;min-width:0;display:flex;}
+  .omnibox{
+    flex:1;min-width:0;
+    display:flex;align-items:center;gap:6px;
+    height:36px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius-pill);
+    padding:0 6px 0 12px;
+  }
+  .omnibox:focus-within{
+    border-color:var(--grad-a);
+    box-shadow:0 0 0 3px rgba(59,79,224,.12);
+    background:var(--surface);
+  }
+  .omnibox svg{flex:0 0 auto;color:var(--ink-faint);}
+  .omnibox input{
+    flex:1;min-width:0;
+    border:none;background:transparent;outline:none;
+    font-size:13.5px;color:var(--ink);
+  }
+  .omnibox input::placeholder{color:var(--ink-faint);}
+  .engine-select{
+    flex:0 0 auto;
+    border:none;background:transparent;
+    font-size:12px;font-weight:600;color:var(--ink-soft);
+    padding:4px 18px 4px 6px;border-radius:var(--radius-pill);
+    cursor:pointer;
+    -webkit-appearance:none;appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5L5 6.5L8 3.5" stroke="%235a6478" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    background-repeat:no-repeat;background-position:right 4px center;
+  }
+  .go-btn{
+    flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:none;
+    background:transparent;color:var(--ink-faint);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .go-btn:hover{color:var(--grad-a);background:#eef1fb;}
+  .star-btn.starred{color:#f2b53a;}
+
+  /* ---------- bookmarks bar ---------- */
+  .bookmarks-bar{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:6px;
+    padding:5px 12px;
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;white-space:nowrap;
+    scrollbar-width:none;
+  }
+  .bookmarks-bar::-webkit-scrollbar{display:none;}
+  .bookmarks-bar.empty{color:var(--ink-faint);font-size:12px;}
+  .bm-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    height:26px;padding:0 10px 0 8px;
+    border:1px solid var(--line);border-radius:var(--radius-pill);
+    background:var(--paper);color:var(--ink-soft);
+    font-size:12px;cursor:pointer;flex:0 0 auto;
+  }
+  .bm-chip:hover{border-color:var(--line-strong);color:var(--ink);}
+  .bm-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--grad);flex:0 0 auto;}
+
+  /* ---------- content ---------- */
+  .viewport{
+    flex:1;
+    position:relative;
+    min-height:0;
+    background:var(--surface);
+  }
+  .tab-panel{
+    position:absolute;inset:0;
+    display:none;
+    flex-direction:column;
+  }
+  .tab-panel.active{display:flex;}
+  .tab-panel iframe{
+    flex:1;width:100%;border:none;background:#fff;
+  }
+
+  /* ---------- new tab hero ---------- */
+  .newtab{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:26px;
+    padding:24px;
+    background:
+      radial-gradient(60% 50% at 50% 0%, rgba(59,79,224,.06), transparent),
+      var(--surface);
+  }
+  .hero-mark{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .hero-title{
+    font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--ink);
+  }
+  .hero-omnibox{
+    width:min(560px, 86vw);
+    display:flex;align-items:center;gap:10px;
+    height:50px;padding:0 8px 0 18px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-pill);
+    box-shadow:0 10px 30px -14px rgba(11,18,32,.18);
+  }
+  .hero-omnibox:focus-within{
+    border-color:var(--grad-a);
+    box-shadow:0 0 0 4px rgba(59,79,224,.12), 0 10px 30px -14px rgba(11,18,32,.18);
+  }
+  .hero-omnibox svg{flex:0 0 auto;color:var(--ink-faint);}
+  .hero-omnibox input{
+    flex:1;border:none;outline:none;background:transparent;
+    font-size:15px;color:var(--ink);
+  }
+  .hero-go{
+    flex:0 0 auto;height:36px;padding:0 16px;border:none;border-radius:var(--radius-pill);
+    background:var(--grad);color:#fff;font-weight:600;font-size:13px;cursor:pointer;
+  }
+  .quicklinks{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
+    width:min(560px,86vw);
+  }
+  .qlink{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    width:74px;padding:10px 4px;
+    border:none;background:transparent;border-radius:var(--radius-md);
+    color:var(--ink-soft);cursor:pointer;
+  }
+  .qlink:hover{background:var(--paper);}
+  .qlink-badge{
+    width:38px;height:38px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:14px;color:#fff;
+    background:var(--grad);
+  }
+  .qlink span{font-size:11px;color:var(--ink-soft);}
+  .hero-hint{font-size:12px;color:var(--ink-faint);text-align:center;max-width:420px;}
+
+  /* ---------- blocked card ---------- */
+  .blocked{
+    flex:1;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:var(--surface);
+  }
+  .blocked-card{
+    width:min(460px,90vw);
+    border:1px solid var(--line);border-radius:16px;
+    padding:26px 24px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+  }
+  .blocked-icon{
+    width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--danger-soft);color:var(--danger);
+  }
+  .blocked-card h3{margin:0;font-size:16px;}
+  .blocked-card p{margin:0;font-size:13px;line-height:1.5;color:var(--ink-soft);}
+  .blocked-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;justify-content:center;}
+  .btn{
+    height:34px;padding:0 14px;border-radius:var(--radius-pill);
+    font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);
+  }
+  .btn:hover{border-color:var(--line-strong);}
+  .btn.primary{background:var(--grad);color:#fff;border:none;}
+
+  /* ---------- side panels ---------- */
+  .panel-overlay{
+    position:absolute;inset:0;background:rgba(11,18,32,.18);
+    display:none;
+  }
+  .panel-overlay.open{display:block;}
+  .panel{
+    position:absolute;top:0;right:0;bottom:0;
+    width:320px;max-width:88vw;
+    background:var(--surface);
+    border-left:1px solid var(--line);
+    box-shadow:-16px 0 40px -20px rgba(11,18,32,.3);
+    display:flex;flex-direction:column;
+    transform:translateX(100%);
+    transition:transform .18s ease;
+  }
+  .panel.open{transform:translateX(0);}
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--line);
+  }
+  .panel-head h2{font-size:14px;margin:0;}
+  .panel-body{flex:1;overflow-y:auto;padding:8px;}
+  .panel-empty{padding:26px 14px;text-align:center;color:var(--ink-faint);font-size:12.5px;}
+  .row{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 8px;border-radius:var(--radius-sm);cursor:pointer;
+  }
+  .row:hover{background:var(--paper);}
+  .row-badge{
+    width:28px;height:28px;border-radius:8px;flex:0 0 auto;
+    background:var(--grad);color:#fff;font-size:11px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .row-main{flex:1;min-width:0;}
+  .row-title{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row-sub{font-size:11px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row-remove{
+    flex:0 0 auto;width:24px;height:24px;border:none;background:transparent;border-radius:6px;
+    color:var(--ink-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  .row-remove:hover{background:#f1e3e0;color:var(--danger);}
+  .panel-foot{padding:10px 14px;border-top:1px solid var(--line);}
+
+  .settings-block{padding:14px 16px;border-bottom:1px solid var(--line);}
+  .settings-block h3{margin:0 0 4px;font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+  .settings-block p{margin:0 0 10px;font-size:11.5px;color:var(--ink-faint);line-height:1.5;}
+  .engine-grid{display:flex;flex-wrap:wrap;gap:6px;}
+  .engine-opt{
+    padding:7px 12px;border-radius:var(--radius-pill);border:1px solid var(--line);
+    background:var(--surface);font-size:12px;cursor:pointer;color:var(--ink-soft);
+  }
+  .engine-opt.selected{background:var(--grad);color:#fff;border-color:transparent;}
+
+  @media (max-width:640px){
+    .tab{min-width:96px;}
+    .titlebar .brand-name{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="shell">
+
+  <!-- Titlebar -->
+  <div class="titlebar">
+    <div class="brand" id="brandHome" title="Suera — на главную">
+      <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+        <defs>
+          <linearGradient id="logoGrad" x1="4" y1="40" x2="44" y2="8" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#3b4fe0"/>
+            <stop offset="1" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <circle cx="22" cy="24" r="18" fill="url(#logoGrad)"/>
+        <path d="M22 6c2 4 2 7-1 9s-1 6 2 6-1 5-3 8 2 5 2 9" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9"/>
+        <path d="M6 20c4-2 6 1 9-1s3-4 7-2" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".75"/>
+        <path d="M32 30c6-2 10 1 12-3" stroke="#8ea0ff" stroke-width="0" fill="none"/>
+        <path d="M31 27l9-3.5c1.6 5.6-.4 10.6-4.4 13.6-4-3-6-8-4.6-10.1z" fill="url(#logoGrad)" stroke="#fff" stroke-width="1.6"/>
+      </svg>
+      <span class="brand-name">Suera</span>
+    </div>
+    <div class="titlebar-spacer"></div>
+    <button class="icon-btn" id="btnBookmarksPanel" title="Закладки" aria-label="Закладки">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="icon-btn" id="btnHistoryPanel" title="История" aria-label="История">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 3-6.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 4v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="icon-btn" id="btnSettingsPanel" title="Настройки" aria-label="Настройки">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.4-2.3.9a7.7 7.7 0 0 0-1.7-1L15 3.4h-6l-.4 2.5a7.7 7.7 0 0 0-1.7 1l-2.3-.9-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.4 2.3-.9a7.7 7.7 0 0 0 1.7 1L9 20.6h6l.4-2.5a7.7 7.7 0 0 0 1.7-1l2.3.9 2-3.4-2-1.6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Tab strip -->
+  <div class="tabstrip" id="tabstrip"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="nav-cluster">
+      <button class="icon-btn" id="btnBack" title="Назад" aria-label="Назад">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" id="btnForward" title="Вперёд" aria-label="Вперёд">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" id="btnReload" title="Обновить" aria-label="Обновить">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 1 2.6 6.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 20v-6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="icon-btn" id="btnHome" title="Домой" aria-label="Домой">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 11.5L12 4l8 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <form class="omnibox-form" id="omniboxForm" autocomplete="off">
+      <div class="omnibox">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input id="omniboxInput" type="text" inputmode="url" placeholder="Введите адрес сайта или поисковый запрос" aria-label="Адрес или поиск">
+        <select class="engine-select" id="engineSelectInline" title="Поисковая система" aria-label="Поисковая система"></select>
+        <button type="button" class="go-btn star-btn" id="btnStar" title="Добавить в закладки" aria-label="Добавить в закладки">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.4 6.6 20.4l1-6.1L3.2 10l6.1-.9L12 3.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </form>
+
+    <button class="icon-btn" id="btnOpenReal" title="Открыть в новой настоящей вкладке браузера" aria-label="Открыть в новой вкладке">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 4h6v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4L11 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Bookmarks bar -->
+  <div class="bookmarks-bar" id="bookmarksBar"></div>
+
+  <!-- Content -->
+  <div class="viewport" id="viewport">
+
+    <div class="panel-overlay" id="panelOverlay"></div>
+
+    <div class="panel" id="panelBookmarks">
+      <div class="panel-head"><h2>Закладки</h2><button class="icon-btn" data-close-panel>✕</button></div>
+      <div class="panel-body" id="bookmarksList"></div>
+    </div>
+
+    <div class="panel" id="panelHistory">
+      <div class="panel-head"><h2>История</h2><button class="icon-btn" data-close-panel>✕</button></div>
+      <div class="panel-body" id="historyList"></div>
+      <div class="panel-foot"><button class="btn" id="btnClearHistory">Очистить историю</button></div>
+    </div>
+
+    <div class="panel" id="panelSettings">
+      <div class="panel-head"><h2>Настройки</h2><button class="icon-btn" data-close-panel>✕</button></div>
+      <div class="panel-body" style="padding:0;">
+        <div class="settings-block">
+          <h3>Поисковая система по умолчанию</h3>
+          <p>DuckDuckGo и Bing открываются прямо внутри Suera. Google и Яндекс запрещают показ своих страниц во встроенных окнах (это ограничение самих сервисов) — Suera открывает их как настоящий поиск в новой вкладке.</p>
+          <div class="engine-grid" id="engineGridSettings"></div>
+        </div>
+        <div class="settings-block">
+          <h3>Данные браузера</h3>
+          <p>Закладки, история и настройки хранятся локально на этом устройстве.</p>
+          <button class="btn" id="btnWipeData">Удалить все данные Suera</button>
+        </div>
+        <div class="settings-block" style="border-bottom:none;">
+          <h3>О Suera</h3>
+          <p id="storageNote">Проверка локального хранилища…</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- storage ---------------- */
+  var STORAGE_OK = false;
+  try {
+    var t = "__suera_test__";
+    window.localStorage.setItem(t, "1");
+    window.localStorage.removeItem(t);
+    STORAGE_OK = true;
+  } catch(e) { STORAGE_OK = false; }
+
+  function load(key, fallback){
+    if(!STORAGE_OK) return fallback;
+    try {
+      var raw = window.localStorage.getItem("suera:"+key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch(e){ return fallback; }
+  }
+  function save(key, value){
+    if(!STORAGE_OK) return;
+    try { window.localStorage.setItem("suera:"+key, JSON.stringify(value)); } catch(e){}
+  }
+
+  var bookmarks = load("bookmarks", []);   // [{url,title}]
+  var historyLog = load("history", []);    // [{url,title,ts}]
+  var settings = load("settings", { engine: "duckduckgo" });
+
+  document.getElementById("storageNote").textContent = STORAGE_OK
+    ? "Suera v1 · однофайловое веб-приложение. Данные хранятся в этом браузере локально."
+    : "Локальное хранилище недоступно в этом окне предпросмотра — закладки и история не сохранятся между перезагрузками. Откройте сохранённый .html файл напрямую в браузере, и всё будет сохраняться как обычно.";
+
+  /* ---------------- search engines ---------------- */
+  var ENGINES = {
+    duckduckgo: { label: "DuckDuckGo", embeddable: true,  build: function(q){ return "https://duckduckgo.com/html/?q="+encodeURIComponent(q); } },
+    bing:       { label: "Bing",       embeddable: true,  build: function(q){ return "https://www.bing.com/search?q="+encodeURIComponent(q); } },
+    google:     { label: "Google",     embeddable: false, build: function(q){ return "https://www.google.com/search?q="+encodeURIComponent(q); } },
+    yandex:     { label: "Яндекс",     embeddable: false, build: function(q){ return "https://yandex.ru/search/?text="+encodeURIComponent(q); } }
+  };
+  var ENGINE_ORDER = ["duckduckgo","bing","google","yandex"];
+
+  var KNOWN_BLOCKED_HOSTS = [
+    "google.com","www.google.com","youtube.com","www.youtube.com",
+    "facebook.com","www.facebook.com","instagram.com","www.instagram.com",
+    "twitter.com","x.com","linkedin.com","www.linkedin.com",
+    "yandex.ru","yandex.com","netflix.com","tiktok.com","www.tiktok.com",
+    "amazon.com","www.amazon.com"
+  ];
+
+  function hostOf(url){
+    try { return new URL(url).hostname.replace(/^www\./,""); } catch(e){ return url; }
+  }
+  function isKnownBlocked(url){
+    var h = hostOf(url);
+    return KNOWN_BLOCKED_HOSTS.indexOf(h) !== -1 || KNOWN_BLOCKED_HOSTS.indexOf("www."+h) !== -1;
+  }
+  function looksLikeUrl(str){
+    var s = str.trim();
+    if(/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) return true;
+    if(/\s/.test(s)) return false;
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?([\/?#].*)?$/i.test(s);
+  }
+  function normalizeUrl(str){
+    var s = str.trim();
+    if(/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) return s;
+    return "https://" + s;
+  }
+
+  /* ---------------- tabs state ---------------- */
+  var tabs = [];
+  var activeId = null;
+  var counter = 0;
+  var NEWTAB_URL = "suera://new-tab";
+
+  var QUICKLINKS = [
+    { name:"DuckDuckGo", url:"https://duckduckgo.com/html/", embeddable:true, letter:"D" },
+    { name:"Bing", url:"https://www.bing.com", embeddable:true, letter:"B" },
+    { name:"Wikipedia", url:"https://ru.wikipedia.org", embeddable:true, letter:"W" },
+    { name:"GitHub", url:"https://github.com", embeddable:true, letter:"G" },
+    { name:"Google", url:"https://www.google.com", embeddable:false, letter:"G" },
+    { name:"YouTube", url:"https://www.youtube.com", embeddable:false, letter:"Y" }
+  ];
+
+  function createTab(url){
+    counter++;
+    var panel = document.createElement("div");
+    panel.className = "tab-panel";
+    panel.dataset.id = counter;
+    viewportEl.insertBefore(panel, panelOverlay);
+
+    var tab = {
+      id: counter,
+      url: null,
+      title: "Новая вкладка",
+      isSearch: false,
+      query: "",
+      mode: "newtab",        // newtab | page | blocked
+      navStack: [NEWTAB_URL],
+      navIndex: 0,
+      panel: panel,
+      iframe: null
+    };
+    tabs.push(tab);
+    renderTabStrip();
+    switchTab(tab.id);
+    if(url) goTo(tab, url);
+    return tab;
+  }
+
+  function getTab(id){
+    for(var i=0;i<tabs.length;i++) if(tabs[i].id===id) return tabs[i];
+    return null;
+  }
+  function activeTab(){ return getTab(activeId); }
+
+  function switchTab(id){
+    activeId = id;
+    tabs.forEach(function(t){ t.panel.classList.toggle("active", t.id===id); });
+    renderTabStrip();
+    syncOmnibox();
+    syncStar();
+    closeAllPanels();
+  }
+
+  function closeTab(id){
+    var idx = tabs.findIndex(function(t){ return t.id===id; });
+    if(idx===-1) return;
+    var t = tabs[idx];
+    t.panel.remove();
+    tabs.splice(idx,1);
+    if(tabs.length===0){
+      createTab();
+      return;
+    }
+    if(activeId===id){
+      var next = tabs[idx] || tabs[idx-1];
+      switchTab(next.id);
+    } else {
+      renderTabStrip();
+    }
+  }
+
+  /* ---------------- navigation ---------------- */
+  function pushNav(tab, url){
+    tab.navStack = tab.navStack.slice(0, tab.navIndex+1);
+    tab.navStack.push(url);
+    tab.navIndex = tab.navStack.length-1;
+  }
+
+  function goTo(tab, rawUrl, opts){
+    opts = opts || {};
+    var url = rawUrl;
+    tab.isSearch = !!opts.isSearch;
+    tab.query = opts.query || "";
+    tab.url = url;
+    tab.title = opts.isSearch ? opts.query : hostOf(url);
+    tab.mode = isKnownBlocked(url) ? "blocked" : "page";
+    pushNav(tab, url);
+    if(tab.mode==="blocked") window.open(url, "_blank", "noopener");
+    renderContent(tab);
+    renderTabStrip();
+    if(tab.id===activeId){ syncOmnibox(); syncStar(); }
+    logHistory(url, tab.title);
+  }
+
+  function applyNavFromStack(tab){
+    var url = tab.navStack[tab.navIndex];
+    if(url === NEWTAB_URL){
+      tab.mode = "newtab"; tab.url = null; tab.title = "Новая вкладка"; tab.isSearch=false; tab.query="";
+    } else {
+      tab.url = url;
+      tab.mode = isKnownBlocked(url) ? "blocked" : "page";
+      tab.title = tab.isSearch ? tab.query : hostOf(url);
+      if(tab.mode==="blocked") window.open(url, "_blank", "noopener");
+    }
+    renderContent(tab);
+    renderTabStrip();
+    if(tab.id===activeId){ syncOmnibox(); syncStar(); }
+  }
+
+  function goBack(){
+    var t = activeTab(); if(!t || t.navIndex<=0) return;
+    t.navIndex--; applyNavFromStack(t);
+  }
+  function goForward(){
+    var t = activeTab(); if(!t || t.navIndex>=t.navStack.length-1) return;
+    t.navIndex++; applyNavFromStack(t);
+  }
+  function goHome(){
+    var t = activeTab(); if(!t) return;
+    if(t.navStack[t.navIndex] !== NEWTAB_URL) pushNav(t, NEWTAB_URL);
+    applyNavFromStack(t);
+  }
+  function reload(){
+    var t = activeTab(); if(!t || t.mode!=="page" || !t.iframe) return;
+    var url = t.url;
+    t.iframe.src = "about:blank";
+    setTimeout(function(){ t.iframe.src = url; }, 20);
+  }
+
+  function submitInput(raw){
+    var t = activeTab(); if(!t) return;
+    var value = raw.trim();
+    if(!value) return;
+    if(looksLikeUrl(value)){
+      goTo(t, normalizeUrl(value));
+    } else {
+      var eng = ENGINES[settings.engine] || ENGINES.duckduckgo;
+      var url = eng.build(value);
+      goTo(t, url, { isSearch:true, query:value });
+    }
+  }
+
+  function openQuickLink(link){
+    var t = activeTab(); if(!t) return;
+    if(link.embeddable){
+      goTo(t, link.url);
+    } else {
+      window.open(link.url, "_blank", "noopener");
+      logHistory(link.url, link.name);
+    }
+  }
+
+  /* ---------------- rendering ---------------- */
+  var tabstripEl = document.getElementById("tabstrip");
+  var viewportEl = document.getElementById("viewport");
+  var panelOverlay = document.getElementById("panelOverlay");
+  var omniboxInput = document.getElementById("omniboxInput");
+  var engineSelectInline = document.getElementById("engineSelectInline");
+  var btnStar = document.getElementById("btnStar");
+  var bookmarksBarEl = document.getElementById("bookmarksBar");
+
+  function renderTabStrip(){
+    tabstripEl.querySelectorAll(".tab").forEach(function(el){ el.remove(); });
+    tabs.forEach(function(t){
+      var el = document.createElement("div");
+      el.className = "tab";
+      el.setAttribute("aria-selected", t.id===activeId ? "true" : "false");
+      el.innerHTML =
+        '<span class="tab-dot"></span>' +
+        '<span class="tab-title"></span>' +
+        '<button class="tab-close" aria-label="Закрыть вкладку" title="Закрыть вкладку">' +
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' +
+        '</button>';
+      el.querySelector(".tab-title").textContent = t.title;
+      el.addEventListener("click", function(ev){
+        if(ev.target.closest(".tab-close")) return;
+        switchTab(t.id);
+      });
+      el.querySelector(".tab-close").addEventListener("click", function(ev){
+        ev.stopPropagation();
+        closeTab(t.id);
+      });
+      tabstripEl.insertBefore(el, newTabBtn);
+    });
+  }
+
+  var newTabBtn = document.createElement("button");
+  newTabBtn.className = "new-tab-btn";
+  newTabBtn.title = "Новая вкладка";
+  newTabBtn.setAttribute("aria-label","Новая вкладка");
+  newTabBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  newTabBtn.addEventListener("click", function(){ createTab(); });
+  tabstripEl.appendChild(newTabBtn);
+
+  function renderContent(tab){
+    tab.panel.innerHTML = "";
+    if(tab.mode === "newtab"){
+      tab.panel.appendChild(buildNewTab());
+    } else if(tab.mode === "blocked"){
+      tab.panel.appendChild(buildBlockedCard(tab));
+    } else {
+      var iframe = document.createElement("iframe");
+      iframe.setAttribute("sandbox","allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation");
+      iframe.referrerPolicy = "no-referrer-when-downgrade";
+      iframe.src = tab.url;
+      tab.iframe = iframe;
+      tab.panel.appendChild(iframe);
+    }
+  }
+
+  function buildNewTab(){
+    var wrap = document.createElement("div");
+    wrap.className = "newtab";
+
+    var mark = document.createElement("div");
+    mark.className = "hero-mark";
+    mark.innerHTML =
+      '<svg width="52" height="52" viewBox="0 0 48 48" fill="none">' +
+        '<defs><linearGradient id="heroGrad" x1="4" y1="40" x2="44" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3b4fe0"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>' +
+        '<circle cx="22" cy="24" r="18" fill="url(#heroGrad)"/>' +
+        '<path d="M22 6c2 4 2 7-1 9s-1 6 2 6-1 5-3 8 2 5 2 9" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9"/>' +
+        '<path d="M6 20c4-2 6 1 9-1s3-4 7-2" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".75"/>' +
+        '<path d="M31 27l9-3.5c1.6 5.6-.4 10.6-4.4 13.6-4-3-6-8-4.6-10.1z" fill="url(#heroGrad)" stroke="#fff" stroke-width="1.6"/>' +
+      '</svg>' +
+      '<div class="hero-title">Suera</div>';
+    wrap.appendChild(mark);
+
+    var form = document.createElement("form");
+    form.className = "hero-omnibox";
+    form.innerHTML =
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' +
+      '<input type="text" placeholder="Поиск в интернете или адрес сайта" aria-label="Поиск">' +
+      '<button type="submit" class="hero-go">Найти</button>';
+    var hInput = form.querySelector("input");
+    form.addEventListener("submit", function(ev){
+      ev.preventDefault();
+      submitInput(hInput.value);
+    });
+    wrap.appendChild(form);
+    setTimeout(function(){ hInput.focus(); }, 30);
+
+    var grid = document.createElement("div");
+    grid.className = "quicklinks";
+    QUICKLINKS.forEach(function(link){
+      var b = document.createElement("button");
+      b.className = "qlink";
+      b.type = "button";
+      b.innerHTML = '<span class="qlink-badge">'+link.letter+'</span><span></span>';
+      b.querySelector("span:last-child").textContent = link.name;
+      b.addEventListener("click", function(){ openQuickLink(link); });
+      grid.appendChild(b);
+    });
+    wrap.appendChild(grid);
+
+    var hint = document.createElement("div");
+    hint.className = "hero-hint";
+    hint.textContent = "По умолчанию поиск выполняется через " + (ENGINES[settings.engine] || ENGINES.duckduckgo).label + " прямо внутри Suera. Изменить движок можно в настройках.";
+    wrap.appendChild(hint);
+
+    return wrap;
+  }
+
+  function buildBlockedCard(tab){
+    var wrap = document.createElement("div");
+    wrap.className = "blocked";
+    var card = document.createElement("div");
+    card.className = "blocked-card";
+
+    var isSearchBlocked = tab.isSearch;
+    var title = isSearchBlocked ? "Открыт настоящий поиск в новой вкладке" : "Сайт нельзя показать внутри Suera";
+    var desc = isSearchBlocked
+      ? "Этот поисковик запрещает встраивание своих страниц в другие сайты (это его собственная защита от подделки интерфейса), поэтому Suera открыла настоящую страницу результатов в отдельной вкладке браузера — это не имитация, а реальный поиск."
+      : "Этот сайт запрещает показ своих страниц внутри других сайтов (X-Frame-Options / CSP) — так устроена защита от подмены интерфейса, и обойти её кодом страницы невозможно. Suera открыла реальную страницу в новой вкладке браузера.";
+
+    card.innerHTML =
+      '<div class="blocked-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg></div>' +
+      '<h3></h3><p></p>' +
+      '<div class="blocked-actions">' +
+        '<button class="btn primary" data-act="open">Открыть снова</button>' +
+        (isSearchBlocked ? '<button class="btn" data-act="ddg">Искать через DuckDuckGo здесь</button>' : '') +
+      '</div>';
+    card.querySelector("h3").textContent = title;
+    card.querySelector("p").textContent = desc;
+    card.querySelector('[data-act="open"]').addEventListener("click", function(){
+      window.open(tab.url, "_blank", "noopener");
+    });
+    var ddgBtn = card.querySelector('[data-act="ddg"]');
+    if(ddgBtn){
+      ddgBtn.addEventListener("click", function(){
+        goTo(tab, ENGINES.duckduckgo.build(tab.query), { isSearch:true, query:tab.query });
+      });
+    }
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  function syncOmnibox(){
+    var t = activeTab(); if(!t) return;
+    omniboxInput.value = t.mode==="newtab" ? "" : (t.isSearch ? t.query : (t.url||""));
+    omniboxInput.placeholder = t.mode==="newtab" ? "Введите адрес сайта или поисковый запрос" : "Введите адрес сайта или поисковый запрос";
+  }
+
+  function isBookmarked(url){
+    return bookmarks.some(function(b){ return b.url===url; });
+  }
+  function syncStar(){
+    var t = activeTab();
+    var url = t && t.mode!=="newtab" ? t.url : null;
+    btnStar.classList.toggle("starred", !!(url && isBookmarked(url)));
+    btnStar.disabled = !url;
+    btnStar.style.opacity = url ? "1" : ".4";
+  }
+
+  /* ---------------- bookmarks ---------------- */
+  function toggleBookmarkActive(){
+    var t = activeTab(); if(!t || t.mode==="newtab") return;
+    var url = t.url;
+    var idx = bookmarks.findIndex(function(b){ return b.url===url; });
+    if(idx===-1){
+      bookmarks.push({ url:url, title: t.isSearch ? t.query : hostOf(url) });
+    } else {
+      bookmarks.splice(idx,1);
+    }
+    save("bookmarks", bookmarks);
+    renderBookmarksBar();
+    renderBookmarksPanel();
+    syncStar();
+  }
+  function removeBookmark(url){
+    bookmarks = bookmarks.filter(function(b){ return b.url!==url; });
+    save("bookmarks", bookmarks);
+    renderBookmarksBar();
+    renderBookmarksPanel();
+    syncStar();
+  }
+  function renderBookmarksBar(){
+    bookmarksBarEl.innerHTML = "";
+    if(bookmarks.length===0){
+      bookmarksBarEl.classList.add("empty");
+      bookmarksBarEl.textContent = "Панель закладок пуста — нажмите ★ в адресной строке, чтобы добавить страницу";
+      return;
+    }
+    bookmarksBarEl.classList.remove("empty");
+    bookmarks.forEach(function(b){
+      var chip = document.createElement("button");
+      chip.className = "bm-chip";
+      chip.innerHTML = '<span class="dot"></span><span></span>';
+      chip.querySelector("span:last-child").textContent = b.title;
+      chip.title = b.url;
+      chip.addEventListener("click", function(){
+        var t = activeTab(); if(!t) return;
+        goTo(t, b.url);
+      });
+      bookmarksBarEl.appendChild(chip);
+    });
+  }
+  function renderBookmarksPanel(){
+    var list = document.getElementById("bookmarksList");
+    list.innerHTML = "";
+    if(bookmarks.length===0){
+      list.innerHTML = '<div class="panel-empty">Пока нет закладок. Откройте страницу и нажмите ★.</div>';
+      return;
+    }
+    bookmarks.forEach(function(b){
+      var row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML =
+        '<div class="row-badge"></div>' +
+        '<div class="row-main"><div class="row-title"></div><div class="row-sub"></div></div>' +
+        '<button class="row-remove" title="Удалить" aria-label="Удалить"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>';
+      row.querySelector(".row-badge").textContent = (b.title||"?").charAt(0).toUpperCase();
+      row.querySelector(".row-title").textContent = b.title;
+      row.querySelector(".row-sub").textContent = hostOf(b.url);
+      row.addEventListener("click", function(ev){
+        if(ev.target.closest(".row-remove")) return;
+        var t = activeTab(); if(!t) return;
+        goTo(t, b.url);
+        closeAllPanels();
+      });
+      row.querySelector(".row-remove").addEventListener("click", function(ev){
+        ev.stopPropagation();
+        removeBookmark(b.url);
+      });
+      list.appendChild(row);
+    });
+  }
+
+  /* ---------------- history ---------------- */
+  function logHistory(url, title){
+    historyLog.unshift({ url:url, title:title, ts:Date.now() });
+    if(historyLog.length>200) historyLog.length = 200;
+    save("history", historyLog);
+    renderHistoryPanel();
+  }
+  function renderHistoryPanel(){
+    var list = document.getElementById("historyList");
+    list.innerHTML = "";
+    if(historyLog.length===0){
+      list.innerHTML = '<div class="panel-empty">История пуста.</div>';
+      return;
+    }
+    historyLog.slice(0,150).forEach(function(h){
+      var row = document.createElement("div");
+      row.className = "row";
+      var d = new Date(h.ts);
+      var timeStr = d.toLocaleString("ru-RU", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+      row.innerHTML =
+        '<div class="row-badge"></div>' +
+        '<div class="row-main"><div class="row-title"></div><div class="row-sub"></div></div>';
+      row.querySelector(".row-badge").textContent = (h.title||"?").charAt(0).toUpperCase();
+      row.querySelector(".row-title").textContent = h.title;
+      row.querySelector(".row-sub").textContent = timeStr + " · " + hostOf(h.url);
+      row.addEventListener("click", function(){
+        var t = activeTab(); if(!t) return;
+        goTo(t, h.url, { isSearch:false });
+        closeAllPanels();
+      });
+      list.appendChild(row);
+    });
+  }
+  function clearHistory(){
+    historyLog = [];
+    save("history", historyLog);
+    renderHistoryPanel();
+  }
+
+  /* ---------------- settings panel ---------------- */
+  function renderEngineControls(){
+    engineSelectInline.innerHTML = "";
+    ENGINE_ORDER.forEach(function(key){
+      var opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = ENGINES[key].label;
+      engineSelectInline.appendChild(opt);
+    });
+    engineSelectInline.value = settings.engine;
+
+    var grid = document.getElementById("engineGridSettings");
+    grid.innerHTML = "";
+    ENGINE_ORDER.forEach(function(key){
+      var b = document.createElement("button");
+      b.className = "engine-opt" + (settings.engine===key ? " selected" : "");
+      b.type = "button";
+      b.textContent = ENGINES[key].label + (ENGINES[key].embeddable ? "" : " ↗");
+      b.addEventListener("click", function(){
+        settings.engine = key;
+        save("settings", settings);
+        renderEngineControls();
+      });
+      grid.appendChild(b);
+    });
+  }
+
+  /* ---------------- panels open/close ---------------- */
+  var panelBookmarks = document.getElementById("panelBookmarks");
+  var panelHistory = document.getElementById("panelHistory");
+  var panelSettings = document.getElementById("panelSettings");
+
+  function closeAllPanels(){
+    [panelBookmarks, panelHistory, panelSettings].forEach(function(p){ p.classList.remove("open"); });
+    panelOverlay.classList.remove("open");
+  }
+  function openPanel(panel){
+    var wasOpen = panel.classList.contains("open");
+    closeAllPanels();
+    if(!wasOpen){
+      panel.classList.add("open");
+      panelOverlay.classList.add("open");
+    }
+  }
+
+  document.getElementById("btnBookmarksPanel").addEventListener("click", function(){ renderBookmarksPanel(); openPanel(panelBookmarks); });
+  document.getElementById("btnHistoryPanel").addEventListener("click", function(){ renderHistoryPanel(); openPanel(panelHistory); });
+  document.getElementById("btnSettingsPanel").addEventListener("click", function(){ renderEngineControls(); openPanel(panelSettings); });
+  panelOverlay.addEventListener("click", closeAllPanels);
+  document.querySelectorAll("[data-close-panel]").forEach(function(b){ b.addEventListener("click", closeAllPanels); });
+  document.getElementById("btnClearHistory").addEventListener("click", clearHistory);
+  document.getElementById("btnWipeData").addEventListener("click", function(){
+    bookmarks = []; historyLog = []; settings = { engine:"duckduckgo" };
+    save("bookmarks", bookmarks); save("history", historyLog); save("settings", settings);
+    renderBookmarksBar(); renderBookmarksPanel(); renderHistoryPanel(); renderEngineControls();
+  });
+
+  /* ---------------- toolbar wiring ---------------- */
+  document.getElementById("btnBack").addEventListener("click", goBack);
+  document.getElementById("btnForward").addEventListener("click", goForward);
+  document.getElementById("btnReload").addEventListener("click", reload);
+  document.getElementById("btnHome").addEventListener("click", goHome);
+  document.getElementById("brandHome").addEventListener("click", goHome);
+  document.getElementById("btnStar").addEventListener("click", toggleBookmarkActive);
+  document.getElementById("btnOpenReal").addEventListener("click", function(){
+    var t = activeTab();
+    if(t && t.url) window.open(t.url, "_blank", "noopener");
+  });
+  document.getElementById("omniboxForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    submitInput(omniboxInput.value);
+  });
+  engineSelectInline.addEventListener("change", function(){
+    settings.engine = engineSelectInline.value;
+    save("settings", settings);
+  });
+
+  document.addEventListener("keydown", function(ev){
+    var mod = ev.ctrlKey || ev.metaKey;
+    if(mod && ev.key.toLowerCase()==="t"){ ev.preventDefault(); createTab(); }
+    else if(mod && ev.key.toLowerCase()==="w"){ ev.preventDefault(); if(activeId!=null) closeTab(activeId); }
+    else if(mod && ev.key.toLowerCase()==="l"){ ev.preventDefault(); omniboxInput.focus(); omniboxInput.select(); }
+    else if(ev.key==="Escape"){ closeAllPanels(); }
+  });
+
+  /* ---------------- boot ---------------- */
+  renderEngineControls();
+  renderBookmarksBar();
+  createTab();
+
+})();
+</script>
+</body>
+</html>
